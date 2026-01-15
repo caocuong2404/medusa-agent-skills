@@ -1,0 +1,12 @@
+{
+  "name": "medusa",
+  "owner": {
+    "name": "Medusa"
+  },
+  "plugins": [
+    {
+      "name": "medusa-dev",
+      "source": "./plugins/medusa"
+    }
+  ]
+}
