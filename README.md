@@ -7,6 +7,7 @@ A collection of Claude Code plugins for building Medusa applications with best p
 | Plugin | Description |
 |--------|-------------|
 | [medusa-dev](plugins/medusa-dev/README.md) | Comprehensive skills for building Medusa applications across backend, admin UI, and storefronts. |
+| [learn-medusa](plugins/learn-medusa/README.md) | Interactive tutorial session to learn about Medusa concepts through building a brands feature. |
 
 ## Installation
 

@@ -11,6 +11,10 @@
     {
       "name": "medusa-dev",
       "source": "./plugins/medusa-dev"
+    },
+    {
+      "name": "learn-medusa",
+      "source": "./plugins/learn-medusa"
     }
   ]
 }

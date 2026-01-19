@@ -76,7 +76,6 @@ This plugin does not collect, store, or transmit any user data or conversation i
 ## TODO
 
 - [x] **General skills** - Core skills for backend, admin UI, and storefront development
-- [ ] **Learning path skill** - Interactive guide for learning Medusa development from scratch
 - [ ] **Commands skill** - Common Medusa CLI commands:
   - `npx medusa db:generate <module-name>` - Generate migrations
   - `npx medusa db:migrate` - Run migrations
