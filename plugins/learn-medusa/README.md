@@ -2,6 +2,17 @@
 
 An interactive, guided tutorial for learning Medusa development from scratch by building a brands feature. Claude acts as your coding bootcamp instructor, teaching you step-by-step with checkpoints and verification.
 
+- [Installation](#installation)
+  - [Prerequisites](#prerequisites)
+  - [Install Plugin](#install-plugin)
+- [Usage](#usage)
+- [What You'll Learn](#what-youll-learn)
+  - [Lesson 1: Build Custom Features (45-60 min)](#lesson-1-build-custom-features-45-60-min)
+  - [Lesson 2: Extend Medusa (45-60 min)](#lesson-2-extend-medusa-45-60-min)
+  - [Lesson 3: Customize Admin Dashboard (45-60 min)](#lesson-3-customize-admin-dashboard-45-60-min)
+- [Features](#features)
+- [Privacy](#privacy)
+
 ## Installation
 
 ### Prerequisites

@@ -4,6 +4,15 @@ A comprehensive set of skills for Claude Code to help developers build Medusa ap
 
 Use this plugin to build backend and frontend features related to Medusa.
 
+- [Installation](#installation)
+  - [Prerequisites](#prerequisites)
+  - [Install Plugin](#install-plugin)
+- [Use Plugin](#use-plugin)
+  - [Example Use Cases](#example-use-cases)
+- [Skills Included](#skills-included)
+- [Commands Included](#commands-included)
+- [Privacy](#privacy)
+
 ## Installation
 
 ### Prerequisites

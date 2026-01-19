@@ -2,6 +2,12 @@
 
 A collection of Claude Code plugins for building Medusa applications with best practices and architectural patterns.
 
+- [Available Plugins](#available-plugins)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Usage with Other Agents](#usage-with-other-agents)
+- [Privacy](#privacy)
+
 ## Available Plugins
 
 | Plugin | Description |
