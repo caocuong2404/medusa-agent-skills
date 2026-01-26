@@ -4,7 +4,9 @@ A comprehensive set of skills for Claude Code to help developers build Medusa ap
 
 Use this plugin to build backend and frontend features related to Medusa.
 
-- [Installation](#installation)
+> For installation and usage with other agents, refer to the [main README](../../README.md).
+
+- [Installation with Claude Code](#installation-with-claude-code)
   - [Prerequisites](#prerequisites)
   - [Install Plugin](#install-plugin)
 - [Use Plugin](#use-plugin)
@@ -13,7 +15,7 @@ Use this plugin to build backend and frontend features related to Medusa.
 - [Commands Included](#commands-included)
 - [Privacy](#privacy)
 
-## Installation
+## Installation with Claude Code
 
 ### Prerequisites
 
@@ -31,7 +33,7 @@ claude
 2. Add Medusa marketplace to Claude Code:
 
 ```bash
-/plugin marketplace add medusajs/medusa-claude-plugins
+/plugin marketplace add medusajs/medusa-agent-skills
 ```
 
 3. Install the plugin:
@@ -82,7 +84,7 @@ Here are some examples of what you can ask Claude to build:
 
 1. `/medusa-dev:db-migrate`: Run migrations in your Medusa project.
 2. `/medusa-dev:db-generate <module-name>`: Generate migrations for a module.
-3. `/medusa-dev:user <email> <password>`: Create an admin user.
+3. `/medusa-dev:new-user <email> <password>`: Create an admin user.
 
 ## Privacy
 

@@ -2,7 +2,9 @@
 
 An interactive, guided tutorial for learning Medusa development from scratch by building a brands feature. Claude acts as your coding bootcamp instructor, teaching you step-by-step with checkpoints and verification.
 
-- [Installation](#installation)
+> For installation and usage with other agents, refer to the [main README](../../README.md).
+
+- [Installation with Claude Code](#installation-with-claude-code)
   - [Prerequisites](#prerequisites)
   - [Install Plugin](#install-plugin)
 - [Usage](#usage)
@@ -13,7 +15,7 @@ An interactive, guided tutorial for learning Medusa development from scratch by 
 - [Features](#features)
 - [Privacy](#privacy)
 
-## Installation
+## Installation with Claude Code
 
 ### Prerequisites
 
@@ -31,7 +33,7 @@ claude
 2. Add Medusa marketplace to Claude Code:
 
 ```bash
-/plugin marketplace add medusajs/medusa-claude-plugins
+/plugin marketplace add medusajs/medusa-agent-skills
 ```
 
 3. Install the plugin:
