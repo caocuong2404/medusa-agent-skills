@@ -152,6 +152,132 @@ export const processCustomersWorkflow = createWorkflow(
 - ❌ No optional chaining (`?.`) → Use `transform()` instead
 - ❌ No double negation (`!!`) → Use `transform()` instead
 
+### Object Operations
+- ❌ No object spreading (`...`) for destructuring or spreading properties → Use `transform()` to create new objects with desired properties
+
+```typescript
+// ❌ WRONG - Object spreading in workflow
+const myWorkflow = createWorkflow(
+  "process-data",
+  function (input: WorkflowInput) {
+    const updatedData = {
+      ...input.data,
+      newField: "value"
+    } // Won't work - spread operator not allowed
+
+    step1(updatedData)
+})
+
+// ✅ CORRECT - Use transform to create new objects
+import { transform } from "@medusajs/framework/workflows-sdk"
+
+const myWorkflow = createWorkflow(
+  "process-data",
+  function (input: WorkflowInput) {
+    const updatedData = transform(
+      { input },
+      (data) => ({
+        ...data.input.data,
+        newField: "value"
+      })
+    )
+
+    step1(updatedData)
+})
+```
+
+### Loops
+- ❌ No `for`/`while` loops → Use alternatives below based on your use case
+
+Workflow composition functions run at application load time to define the workflow structure, not to execute logic. Loops cannot be used directly in the composition function. Instead, use these patterns:
+
+**Alternative 1: Loop in Calling Code (Repeat entire workflow)**
+
+When you need to execute a workflow multiple times (e.g., once per item in an array), wrap the workflow execution in a loop in the code that calls the workflow:
+
+```typescript
+// ❌ WRONG - Loop inside workflow composition
+const myWorkflow = createWorkflow(
+  "hello-world",
+  function (input: WorkflowInput) {
+    for (const item of input.items) {
+      step1(item) // Won't work - loop runs at load time, not execution time
+    }
+})
+
+// ✅ CORRECT - Loop in calling code
+// API route that calls the workflow
+import {
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http"
+import myWorkflow from "../../workflows/my-workflow"
+
+export async function POST(
+  req: MedusaRequest,
+  res: MedusaResponse
+) {
+  const { items } = req.body
+
+  // Execute the workflow once for each item
+  for (const item of items) {
+    await myWorkflow(req.scope)
+      .run({ item })
+  }
+
+  res.status(200).send({ success: true })
+}
+
+// Workflow definition - processes a single item
+const myWorkflow = createWorkflow(
+  "hello-world",
+  function (input: WorkflowInput) {
+    step1(input.item)
+})
+```
+
+**Alternative 2: Use `transform` for Array Operations (Prepare step inputs)**
+
+When you need to iterate over an array to prepare inputs for a step, use `transform()` to map over the array:
+
+```typescript
+// ❌ WRONG - Loop to build array
+const myWorkflow = createWorkflow(
+  "hello-world",
+  function (input: WorkflowInput) {
+    const stepInputs = []
+    for (const item of input.items) {
+      stepInputs.push({ id: item.id }) // Won't work - loop runs at load time
+    }
+    step1(stepInputs)
+})
+
+// ✅ CORRECT - Use transform to map array
+import { transform } from "@medusajs/framework/workflows-sdk"
+
+const myWorkflow = createWorkflow(
+  "hello-world",
+  function (input: WorkflowInput) {
+    const stepInputs = transform(
+      {
+        input,
+      },
+      (data) => {
+        // This function runs at execution time
+        return data.input.items.map((item) => ({ id: item.id }))
+      }
+    )
+
+    step1(stepInputs)
+})
+```
+
+**Why this matters:**
+- The workflow composition function runs once at application load time to define the structure
+- Loops would execute at load time with no data, not at execution time with actual input
+- Alternative 1 repeats the entire workflow (including rollback capability) for each item
+- Alternative 2 processes arrays within a single workflow execution using `transform()`
+
 ### Error Handling
 - ❌ No `try-catch` blocks → See error handling patterns in Medusa documentation
 
