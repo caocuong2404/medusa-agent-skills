@@ -11,6 +11,8 @@ Medusa's Query API (`query.graph()`) is the primary way to retrieve data, especi
 - [Important Filtering Limitation](#important-filtering-limitation)
 - [Pagination](#pagination)
 - [Querying Linked Data](#querying-linked-data)
+  - [Option 1: query.graph() - Retrieve Linked Data Without Cross-Module Filters](#option-1-querygraph---retrieve-linked-data-without-cross-module-filters)
+  - [Option 2: query.index() - Filter Across Linked Modules (Index Module)](#option-2-queryindex---filter-across-linked-modules-index-module)
 - [Validation with throwIfKeyNotFound](#validation-with-throwifkeynotfound)
 - [Performance Best Practices](#performance-best-practices)
 
@@ -245,17 +247,18 @@ const { data: products } = await query.graph({
 
 ## Important Filtering Limitation
 
-**⚠️ CRITICAL**: You **CANNOT** filter by fields from linked data models (different modules). Filters only work on data models within the same module.
+**⚠️ CRITICAL**: With `query.graph()`, you **CANNOT** filter by fields from linked data models in different modules. The `query.graph()` method only supports filters on data models within the same module.
 
 ### What This Means
 
-- **Same Module** (✅ Can filter): Product and ProductVariant, Order and LineItem, Cart and CartItem
-- **Different Modules** (❌ Cannot filter): Product and Brand (custom), Product and Customer, Review and Product
+- **Same Module** (✅ Can filter with `query.graph()`): Product and ProductVariant, Order and LineItem, Cart and CartItem
+- **Different Modules** (❌ Cannot filter with `query.graph()`): Product and Brand (custom), Product and Customer, Review and Product
+- **Different Modules** (✅ Can filter with `query.index()`): Any linked modules when using the Index Module
 
-### Example: Cannot Filter Products by Linked Brand
+### Example: Cannot Filter Products by Linked Brand with query.graph()
 
 ```typescript
-// ❌ THIS DOES NOT WORK
+// ❌ THIS DOES NOT WORK with query.graph()
 const { data: products } = await query.graph({
   entity: "product",
   fields: ["id", "title", "brand.*"],
@@ -264,7 +267,7 @@ const { data: products } = await query.graph({
   }
 })
 
-// ❌ THIS ALSO DOES NOT WORK
+// ❌ THIS ALSO DOES NOT WORK with query.graph()
 const { data: products } = await query.graph({
   entity: "product",
   fields: ["id", "title", "brand.*"],
@@ -276,9 +279,37 @@ const { data: products } = await query.graph({
 })
 ```
 
-### Solution 1: Query from Other Side (Recommended)
+### Solution 1: Use query.index() with Index Module (Recommended)
 
-**✅ BEST APPROACH**: Query the linked module and filter on it directly:
+**✅ BEST APPROACH**: Use the Index Module to filter across linked modules efficiently at the database level:
+
+```typescript
+// ✅ CORRECT: Use query.index() to filter products by linked brand
+const { data: products } = await query.index({
+  entity: "product",
+  fields: ["*", "brand.*"],
+  filters: {
+    brand: {
+      name: "Nike" // ✅ Works with Index Module!
+    }
+  }
+})
+```
+
+**Why this is best:**
+- Database-level filtering (most efficient)
+- Supports pagination properly
+- Only retrieves the data you need
+- Designed specifically for cross-module filtering
+
+**Requirements:**
+- Index Module must be installed and configured
+- Link must have `filterable` properties defined
+- See [Querying Linked Data](#querying-linked-data) section for setup details
+
+### Solution 2: Query from Other Side
+
+**✅ GOOD ALTERNATIVE**: Query the linked module and filter on it directly using `query.graph()`:
 
 ```typescript
 // ✅ CORRECT: Query brands and get their products
@@ -294,9 +325,14 @@ const { data: brands } = await query.graph({
 const nikeProducts = brands[0]?.products || []
 ```
 
-### Solution 2: Filter After Query
+**Use this when:**
+- You don't have the Index Module set up
+- The "other side" of the link makes sense as the primary entity
+- You need a quick solution without additional setup
 
-**⚠️ LESS EFFICIENT**: Query all data, then filter in JavaScript:
+### Solution 3: Filter After Query (Least Efficient)
+
+**⚠️ LAST RESORT**: Query all data with `query.graph()`, then filter in JavaScript:
 
 ```typescript
 // Get all products with brands
@@ -309,19 +345,26 @@ const { data: products } = await query.graph({
 const nikeProducts = products.filter(p => p.brand?.name === "Nike")
 ```
 
-**Note**: Solution 1 (query from other side) is preferred because:
-- Database filters are more efficient than JavaScript filters
-- Reduces data transfer and memory usage
-- Supports pagination at the database level
+**Only use this when:**
+- Dataset is very small (< 100 records)
+- Index Module is not available
+- Querying from the other side doesn't make sense
+- You need a temporary solution
+
+**Avoid because:**
+- Fetches unnecessary data from database
+- Inefficient for large datasets
+- No pagination support at database level
+- Uses more memory and network bandwidth
 
 ### More Examples
 
 #### Example: Approved Reviews for a Specific Product
 
-When you need to filter linked data by its own properties, query from that entity directly:
+When you need to filter linked data by its own properties, you have multiple options:
 
 ```typescript
-// ❌ WRONG: Cannot filter linked reviews from product query
+// ❌ WRONG: Cannot filter linked reviews from product query with query.graph()
 const { data: products } = await query.graph({
   entity: "product",
   fields: ["id", "reviews.*"],
@@ -341,7 +384,19 @@ const { data: products } = await query.graph({
 })
 const approvedReviews = products[0].reviews.filter(r => r.status === "approved") // ❌ Client-side filter
 
-// ✅ CORRECT: Query reviews directly with filters
+// ✅ OPTION 1 (BEST): Use Index Module to filter cross-module
+const { data: products } = await query.index({
+  entity: "product",
+  fields: ["*", "reviews.*"],
+  filters: {
+    id: productId,
+    reviews: {
+      status: "approved" // ✅ Works with Index Module!
+    }
+  }
+})
+
+// ✅ OPTION 2 (GOOD): Query reviews directly with filters
 const { data: reviews } = await query.graph({
   entity: "review",
   fields: ["id", "rating", "comment", "product.*"],
@@ -352,16 +407,21 @@ const { data: reviews } = await query.graph({
 })
 ```
 
-**Why this is better:**
-- Database filters are more efficient than JavaScript filters
-- Reduces data transferred over the network
+**Why Option 1 (Index Module) is best:**
+- Database-level filtering across modules
+- Returns data in the structure you expect (product with reviews)
 - Supports pagination properly
 - Only retrieves the data you need
+
+**Why Option 2 (query from other side) is good:**
+- No Index Module setup required
+- Still uses database filtering
+- Works well when the "other side" is the logical primary entity
 
 #### Example: Reviews for Active Products (Cross-Module)
 
 ```typescript
-// ❌ WRONG
+// ❌ WRONG: Cannot filter by linked module with query.graph()
 const { data } = await query.graph({
   entity: "review",
   fields: ["id", "rating", "product.*"],
@@ -372,7 +432,18 @@ const { data } = await query.graph({
   }
 })
 
-// ✅ CORRECT: Get active products with reviews
+// ✅ OPTION 1 (BEST): Use Index Module
+const { data: reviews } = await query.index({
+  entity: "review",
+  fields: ["*", "product.*"],
+  filters: {
+    product: {
+      status: "active" // ✅ Works with Index Module!
+    }
+  }
+})
+
+// ✅ OPTION 2 (GOOD): Query from the other side
 const { data: products } = await query.graph({
   entity: "product",
   fields: ["id", "title", "reviews.*"],
@@ -386,7 +457,8 @@ const reviews = products.flatMap(p => p.reviews)
 #### Example: Products with Variants (Same Module - Works!)
 
 ```typescript
-// ✅ CORRECT: Product and variants are in same module
+// ✅ CORRECT: Product and variants are in same module (Product Module)
+// Use query.graph() - no need for Index Module
 const { data: products } = await query.graph({
   entity: "product",
   fields: ["id", "title", "variants.*"],
@@ -447,10 +519,21 @@ pagination: {
 
 ## Querying Linked Data
 
-When entities are linked via [module links](module-links.md), query across them using dot notation:
+When entities are linked via [module links](module-links.md), you have two options depending on your filtering needs:
+
+### Option 1: query.graph() - Retrieve Linked Data Without Cross-Module Filters
+
+**Use `query.graph()` when:**
+- ✅ Retrieving linked data without filtering by linked module properties
+- ✅ Filtering only by properties in the primary entity's module
+- ✅ You want to include related data in the response
+
+**Limitations:**
+- ❌ **CANNOT filter by properties of linked modules** (data models in separate modules)
+- ✅ **CAN filter by properties of relations in the same module** (e.g., product.variants)
 
 ```typescript
-// Get products with their linked brands
+// ✅ WORKS: Get products with their linked brands (no cross-module filtering)
 const { data: products } = await query.graph({
   entity: "product",
   fields: [
@@ -459,15 +542,37 @@ const { data: products } = await query.graph({
     "brand.*", // All brand fields
   ],
   filters: {
-    id: "prod_123",
+    id: "prod_123", // ✅ Filter by product property (same module)
   },
 })
 
 // Access linked data
 console.log(products[0].brand.name)
+
+// ✅ WORKS: Filter by same-module relation (product and variants are in Product Module)
+const { data: products } = await query.graph({
+  entity: "product",
+  fields: ["id", "title", "variants.*"],
+  filters: {
+    variants: {
+      sku: "ABC1234" // ✅ Works: variants are in same module as product
+    }
+  }
+})
+
+// ❌ DOES NOT WORK: Cannot filter products by linked brand name
+const { data: products } = await query.graph({
+  entity: "product",
+  fields: ["id", "title", "brand.*"],
+  filters: {
+    brand: {
+      name: "Nike" // ❌ Fails: brand is in a different module
+    }
+  }
+})
 ```
 
-### Reverse Query (From Link to Original)
+**Reverse Query (From Link to Original):**
 
 ```typescript
 // Get brands with their linked products
@@ -485,6 +590,158 @@ brands[0].products.forEach(product => {
   console.log(product.title)
 })
 ```
+
+### Option 2: query.index() - Filter Across Linked Modules (Index Module)
+
+**Use `query.index()` when:**
+- ✅ You need to filter data by properties of linked modules (separate modules with module links)
+- ✅ Filtering by custom data model properties linked to Commerce Module entities
+- ✅ Complex cross-module queries requiring efficient database-level filtering
+
+**Key Distinction:**
+- **Same module relations** (e.g., Product → ProductVariant): Use `query.graph()` ✅
+- **Different module links** (e.g., Product → Brand, Product → Review): Use `query.index()` ✅
+
+#### When to Use query.index()
+
+The Index Module solves the fundamental limitation of `query.graph()`: **you cannot filter one module's data by another module's linked properties** using `query.graph()`.
+
+Examples of when you need `query.index()`:
+- Filter products by brand name (Product Module → Brand Module)
+- Filter products by review ratings (Product Module → Review Module)
+- Filter customers by custom loyalty tier (Customer Module → Loyalty Module)
+- Any scenario where you need to filter by properties of a linked data model in a different module
+
+#### Setup Requirements
+
+Before using `query.index()`, ensure the Index Module is configured:
+
+1. **Install the Index Module:**
+   ```bash
+   npm install @medusajs/index
+   ```
+
+2. **Add to `medusa-config.ts`:**
+   ```typescript
+   module.exports = defineConfig({
+     modules: [
+       {
+         resolve: "@medusajs/index",
+       },
+     ],
+   })
+   ```
+
+3. **Enable the feature flag in `.env`:**
+   ```bash
+   MEDUSA_FF_INDEX_ENGINE=true
+   ```
+
+4. **Run migrations:**
+   ```bash
+   npx medusa db:migrate
+   ```
+
+5. **Mark linked properties as filterable** in your link definition:
+   ```typescript
+   // src/links/product-brand.ts
+   defineLink(
+     { linkable: ProductModule.linkable.product, isList: true },
+     { linkable: BrandModule.linkable.brand, filterable: ["id", "name"] }
+   )
+   ```
+
+   The `filterable` property marks which fields can be queried across modules.
+
+6. **Start the application** to trigger data ingestion into the Index Module.
+
+#### Using query.index()
+
+```typescript
+const query = req.scope.resolve("query")
+
+// ✅ CORRECT: Filter products by linked brand name using Index Module
+const { data: products } = await query.index({
+  entity: "product",
+  fields: ["*", "brand.*"],
+  filters: {
+    brand: {
+      name: "Nike", // ✅ Works with Index Module!
+    },
+  },
+})
+
+// ✅ CORRECT: Filter products by review ratings
+const { data: products } = await query.index({
+  entity: "product",
+  fields: ["id", "title", "reviews.*"],
+  filters: {
+    reviews: {
+      rating: {
+        $gte: 4, // Products with reviews rated 4 or higher
+      },
+    },
+  },
+})
+```
+
+#### query.index() Features
+
+**Pagination:**
+```typescript
+const { data: products } = await query.index({
+  entity: "product",
+  fields: ["*", "brand.*"],
+  filters: {
+    brand: { name: "Nike" },
+  },
+  pagination: {
+    take: 20,
+    skip: 0,
+  },
+})
+```
+
+**Advanced Filters:**
+```typescript
+const { data: products } = await query.index({
+  entity: "product",
+  fields: ["*", "brand.*"],
+  filters: {
+    brand: {
+      name: {
+        $like: "%Acme%", // LIKE operator
+      },
+    },
+    status: {
+      $ne: "deleted", // Not equal
+    },
+  },
+})
+```
+
+#### query.graph() vs query.index() Decision Tree
+
+```
+Need to filter by linked module properties?
+├─ No → Use query.graph()
+│   └─ Faster, simpler, works for most queries
+│
+└─ Yes → Are the entities in the same module or different modules?
+    ├─ Same module (e.g., product.variants) → Use query.graph()
+    │   └─ Example: Product and ProductVariant both in Product Module
+    │
+    └─ Different modules (e.g., product → brand) → Use query.index()
+        └─ Example: Product (Product Module) → Brand (Custom Module)
+        └─ Requires Index Module setup and filterable properties
+```
+
+#### Important Notes
+
+- **Performance:** The Index Module pre-ingests data on application startup, enabling efficient cross-module filtering
+- **Data Freshness:** Data is synced automatically, but there may be a brief delay after mutations
+- **Fallback:** If you don't need filtering, `query.graph()` is sufficient and more straightforward
+- **Module Relations:** Always use `query.graph()` for same-module relations (product → variants, order → line items)
 
 ## Validation with throwIfKeyNotFound
 

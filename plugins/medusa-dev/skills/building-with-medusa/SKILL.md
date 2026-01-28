@@ -55,7 +55,8 @@ Frontend (admin dashboard/storefront via SDK)
 - Only GET, POST, DELETE methods (never PUT/PATCH)
 - Workflows are required for ALL mutations
 - Business logic belongs in workflow steps, NOT routes
-- Query with `query.graph()` for cross-module data
+- Query with `query.graph()` for cross-module data retrieval
+- Query with `query.index()` (Index Module) for filtering across separate modules with links
 - Module links maintain isolation between modules
 
 ## Rule Categories by Priority
@@ -101,11 +102,13 @@ Frontend (admin dashboard/storefront via SDK)
 
 ### 5. Data Access Patterns (MEDIUM)
 
-- `data-query-graph` - Use `query.graph()` for cross-module queries with dot notation
+- `data-query-method` - Use `query.graph()` for retrieving data; use `query.index()` (Index Module) for filtering across linked modules
+- `data-query-graph` - Use `query.graph()` for cross-module queries with dot notation (without cross-module filtering)
+- `data-query-index` - Use `query.index()` when filtering by properties of linked data models in separate modules
 - `data-list-and-count` - Use `listAndCount` for single-module paginated queries
-- `data-linked-filtering` - Can't filter by linked module fields - query from that entity directly instead
-- `data-no-js-filter` - Don't use JavaScript `.filter()` on linked data - use database filters by querying the entity
-- `data-same-module-ok` - Can filter by same-module relations (e.g., product.variants)
+- `data-linked-filtering` - `query.graph()` can't filter by linked module fields - use `query.index()` or query from that entity directly
+- `data-no-js-filter` - Don't use JavaScript `.filter()` on linked data - use database filters (`query.index()` or query the entity)
+- `data-same-module-ok` - Can filter by same-module relations with `query.graph()` (e.g., product.variants)
 - `data-auth-middleware` - Trust `authenticate` middleware, don't manually check `req.auth_context`
 
 ### 6. File Organization (MEDIUM)
@@ -176,9 +179,10 @@ Before implementing, verify you're NOT doing these:
 - [ ] Dynamic imports for workflows or modules
 
 **Data Access:**
-- [ ] Filtering by linked module fields (query from other side instead)
-- [ ] Using JavaScript `.filter()` on linked data (query the linked entity directly)
-- [ ] Not using query.graph() for cross-module queries
+- [ ] Filtering by linked module fields with `query.graph()` (use `query.index()` or query from other side instead)
+- [ ] Using JavaScript `.filter()` on linked data (use `query.index()` or query the linked entity directly)
+- [ ] Not using `query.graph()` for cross-module data retrieval
+- [ ] Using `query.graph()` when you need to filter across separate modules (use `query.index()` instead)
 
 ## Validating Implementation
 
