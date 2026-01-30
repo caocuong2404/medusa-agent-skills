@@ -73,6 +73,20 @@ export const sdk = new Medusa({
 - Without it, product queries may fail or return incorrect prices
 - Get publishable key from Medusa admin dashboard under Settings → Publishable API Keys
 
+**IMPORTANT: Storefront Port Configuration**
+
+- **Run storefront at port 8000** to avoid CORS errors
+- Medusa backend's default CORS configuration expects storefront at `http://localhost:8000`
+- If using different port, configure CORS in Medusa backend's `medusa-config.ts`:
+  ```typescript
+  store_cors: process.env.STORE_CORS || "http://localhost:YOUR_PORT"
+  ```
+- Common framework defaults:
+  - Next.js: Port 3000 (needs CORS config update)
+  - TanStack Start: Port 3000 (needs CORS config update)
+  - Vite: Port 5173 (needs CORS config update)
+  - **Recommended**: Use port 8000 to avoid configuration changes
+
 ## Vite Configuration (TanStack Start, Vite Projects)
 
 **IMPORTANT: For Vite-based projects, configure SSR externals.**
