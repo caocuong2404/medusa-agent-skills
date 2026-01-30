@@ -12,12 +12,6 @@ Use this plugin to build frontend features for ecommerce storefronts, including 
 - [Use Plugin](#use-plugin)
   - [Example Use Cases](#example-use-cases)
 - [Skills Included](#skills-included)
-- [Coverage](#coverage)
-  - [Components (12)](#components-12)
-  - [Layouts (8)](#layouts-8)
-  - [Features (2)](#features-2)
-  - [General Best Practices (5)](#general-best-practices-5)
-- [Features](#features)
 - [Privacy](#privacy)
 
 ## Installation with Claude Code
