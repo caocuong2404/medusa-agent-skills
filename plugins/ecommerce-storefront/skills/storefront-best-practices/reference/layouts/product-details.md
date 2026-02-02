@@ -88,10 +88,11 @@ Fetch product data in the dynamic route based on the handle/ID parameter from th
 - Example: Save 37%
 
 **Variant price changes:**
-- "Starting at $X" if variants have different prices
-- Update price dynamically when variant selected
+- **When no variant selected**: Show "From $X" where X is the minimum variant price across all variants
+- **When variant selected**: Update price dynamically to show the exact variant price
 - No page reload required
-- Show price change clearly (highlight briefly)
+- Show price change clearly (highlight briefly on change)
+- Example: Product with variants priced at $29.99, $34.99, $39.99 → Show "From $29.99" initially
 
 ### Medusa Pricing (CRITICAL)
 
@@ -500,6 +501,7 @@ const recommendations = await fetch(`/products/${id}/recommendations`)
 
 - [ ] High-quality product images with zoom
 - [ ] Price displayed correctly (Medusa: use value as-is, not divided)
+- [ ] Price shows "From $X" when no variant selected (X = minimum variant price)
 - [ ] Variant selection required before adding to cart
 - [ ] Variant selection updates: price, stock, image
 - [ ] Disable unavailable variant options (gray out)

@@ -349,6 +349,57 @@ Cart items, addresses, shipping method/cost, payment method, order total breakdo
 
 **On payment failure:** Show specific error, keep form data, allow retry without re-entering.
 
+### Order Completion and Cart Cleanup (CRITICAL)
+
+**After order is successfully placed, you MUST reset the cart state:**
+
+**Common issue:** Cart popup and cart state still show old cart content after order is placed. This happens because the global cart state (Context, Zustand, Redux) isn't cleared after checkout completion.
+
+**Required actions on successful order:**
+
+1. **Clear cart from global state:**
+   - Reset cart state in Context/Zustand/Redux to null or empty
+   - Update cart count to 0 in navbar
+   - Prevent old cart items from showing in cart popup
+
+2. **Clear localStorage cart ID:**
+   - Remove cart ID from localStorage: `localStorage.removeItem('cart_id')`
+   - Or create new cart and update cart ID in localStorage
+   - Ensures fresh cart for next shopping session
+
+3. **Invalidate cart queries (if using TanStack Query):**
+   - `queryClient.invalidateQueries({ queryKey: ['cart'] })`
+   - Or `queryClient.removeQueries({ queryKey: ['cart', cartId] })`
+   - Prevents stale cart data from cache
+
+4. **Redirect to order confirmation page:**
+   - Navigate to `/order-confirmation/[order_id]` or `/thank-you/[order_id]`
+   - Show order details, tracking info, confirmation
+
+**Pattern:**
+```typescript
+// After successful order placement
+async function onOrderSuccess(order) {
+  // 1. Clear cart state
+  setCart(null) // or clearCart() from context
+
+  // 2. Clear localStorage
+  localStorage.removeItem('cart_id')
+
+  // 3. Invalidate queries (if using TanStack Query)
+  queryClient.invalidateQueries({ queryKey: ['cart'] })
+
+  // 4. Redirect to confirmation
+  router.push(`/order-confirmation/${order.id}`)
+}
+```
+
+**Why this is critical:**
+- Without clearing cart state, cart popup shows old items after order
+- User sees "phantom cart" if they click cart icon after checkout
+- Creates confusion and poor UX
+- May prevent user from starting new shopping session
+
 ## Mobile Checkout
 
 **Key optimizations:**
@@ -431,3 +482,5 @@ Cart items, addresses, shipping method/cost, payment method, order total breakdo
 - [ ] Keyboard accessible (tab through fields, enter to submit)
 - [ ] ARIA labels on form fields (aria-required, aria-invalid)
 - [ ] Redirect to order confirmation on success
+- [ ] **CRITICAL: Clear cart state after successful order** (reset cart in Context/Zustand, remove cart ID from localStorage, invalidate cart queries)
+- [ ] Cart popup shows empty cart after order completion (not old items)

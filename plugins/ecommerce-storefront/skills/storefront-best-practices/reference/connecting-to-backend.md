@@ -231,6 +231,29 @@ Use framework-specific auth patterns for redirects.
 - Real-time cart count updates
 - Optimistic UI updates (update UI immediately, sync with backend)
 
+### Cart Cleanup After Order Placement (CRITICAL)
+
+**IMPORTANT: After order is successfully placed, you MUST reset the cart state.**
+
+**Common issue:** Cart popup and global cart state still show old items after order completion. This happens when cart state isn't cleared after checkout.
+
+**Required cleanup actions:**
+
+1. **Clear cart from global state** - Reset cart state to null/empty in Context/Zustand/Redux
+2. **Clear localStorage cart ID** - Remove cart ID: `localStorage.removeItem('cart_id')`
+3. **Invalidate cart queries** - If using TanStack Query: `queryClient.invalidateQueries({ queryKey: ['cart'] })`
+4. **Update cart count to 0** - Navbar and UI should reflect empty cart
+
+**When to clear:**
+- After successful order placement (order confirmed)
+- On navigation to order confirmation page
+- Before redirecting to thank you page
+
+**Why this is critical:**
+- Prevents "phantom cart" from appearing in cart popup after order
+- Ensures clean state for next shopping session
+- Improves UX by not showing old cart items
+
 ## Error Handling for Ecommerce
 
 ### Ecommerce-Specific Errors

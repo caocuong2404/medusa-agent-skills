@@ -352,7 +352,10 @@ Before implementing, watch out for these common ecommerce-specific pitfalls:
 - ❌ **CRITICAL: Missing `aria-live="polite"` on cart count** - Screen readers won't announce cart updates without it
 - ❌ Not displaying variant details (size, color, etc.) in cart popup - only showing product title
 - ❌ Megamenu closes when hovering over dropdown content (must stay open when hovering trigger OR dropdown)
-- ❌ Megamenu positioned relative to trigger item instead of viewport/navbar (causes off-center dropdown)
+- ❌ **CRITICAL: Megamenu positioning errors** - Three common mistakes:
+  - ❌ Navbar doesn't have `position: relative` (megamenu won't position correctly)
+  - ❌ Megamenu positioned relative to trigger button instead of navbar (use `absolute left-0` on megamenu)
+  - ❌ Megamenu doesn't span full width (must use `right-0` or `w-full`, not just `w-auto`)
 - ❌ Hardcoding categories, featured products, or any dynamic content instead of fetching from backend
 - ❌ No clear indication of current page in category navigation
 
@@ -414,3 +417,4 @@ Before implementing, watch out for these common ecommerce-specific pitfalls:
 - ❌ Making API calls on client-side that should be server-side (SEO, security)
 - ❌ Not implementing proper error messages ("Error occurred" vs "Product out of stock")
 - ❌ Missing cache invalidation (stale product data, prices, inventory)
+- ❌ **Not clearing cart state after order is placed** - Cart popup shows old items because cart wasn't reset from Context/localStorage/cache

@@ -74,6 +74,8 @@ Cart popup (mini cart/cart drawer) shows quick cart overview without navigating 
 - Store cart data globally (React Context or TanStack Query)
 - Persist cart ID in localStorage
 - Optimistic UI updates (update immediately, revert on error)
+- **CRITICAL: Clear cart state after order is placed** - See connecting-to-backend.md for cart cleanup pattern
+- Common issue: Cart popup shows old items after checkout because cart state wasn't cleared
 - See connecting-to-backend.md for cart state patterns
 
 **Cart item display:**

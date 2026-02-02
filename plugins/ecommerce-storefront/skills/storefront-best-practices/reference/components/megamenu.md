@@ -84,24 +84,76 @@ Electronics (header)
 
 ## Layout Patterns
 
-**Full-width dropdown:**
+### ⚠️ CRITICAL: Megamenu Positioning (Common Mistake)
 
-**CRITICAL: Position megamenu relative to viewport or navbar, NOT relative to the trigger item.**
+**Common positioning errors that MUST be avoided:**
 
-- Megamenu should span entire viewport width, centered
-- Use `position: absolute` on dropdown with positioning relative to navbar/viewport
-- Do NOT position relative to trigger item (causes off-center/misaligned dropdowns)
-- Common implementation: Navbar has `position: relative`, megamenu has `position: absolute` with `left: 0; right: 0`
+❌ **Mistake 1: Navbar doesn't have `position: relative`**
+- Without positioning context on navbar, megamenu won't position correctly
+- Megamenu will position relative to document body instead of navbar
+
+❌ **Mistake 2: Megamenu positioned relative to trigger button**
+- Causes megamenu to appear offset, not aligned to left edge
+- Megamenu won't span full width of navbar
+- Different trigger positions cause inconsistent megamenu placement
+
+❌ **Mistake 3: Megamenu doesn't span full width**
+- Using `width: auto` or no width constraint
+- Missing `left: 0` and `right: 0` properties
+- Results in narrow dropdown instead of full-width panel
+
+---
+
+**REQUIRED positioning pattern:**
+
+**Visual structure:**
+```
+┌─────────────────────────────────────────────────┐
+│ NAVBAR (position: relative)                     │
+│  [Logo]  [Shop ▼]  [Men]  [Women]  [Cart]      │
+└─────────────────────────────────────────────────┘
+  ┌───────────────────────────────────────────────┐
+  │ MEGAMENU (absolute, left: 0, full width)      │
+  │ ┌─────────────────────────────────────────┐   │
+  │ │ Container (centered content)            │   │
+  │ │ [Col1]  [Col2]  [Col3]  [Promo]        │   │
+  │ └─────────────────────────────────────────┘   │
+  └───────────────────────────────────────────────┘
+```
+
+**Required structure:**
+
+1. **Navbar container**
+   - MUST have `position: relative`
+   - Creates positioning context for megamenu
+   - Contains both trigger button and megamenu dropdown
+
+2. **Megamenu dropdown**
+   - MUST have `position: absolute`
+   - MUST have `left: 0` (aligns to left edge of navbar)
+   - MUST have `right: 0` OR `width: 100%` (spans full navbar width)
+   - MUST have `top: 100%` (positioned directly below navbar)
+   - Should have appropriate `z-index` (above content, below modals)
+
+3. **Content wrapper (inside megamenu)**
+   - Use constrained width container (e.g., `max-width`, `container`)
+   - Center content with `margin: 0 auto`
+   - Contains grid/columns for megamenu content
+
+**Why this pattern is mandatory:**
+- Navbar `position: relative` creates positioning context
+- Megamenu `absolute` + `left: 0` + full width ensures consistent, full-width layout
+- Positioning relative to navbar (not trigger) prevents offset issues
+- Inner container centers content while maintaining full-width background
+
+---
+
+### Other Layout Considerations
+
 - Positioned below navbar (no gap)
 - White/light background, boxed padding
 - Shadow or border for depth
 - High z-index (above page content, below modals)
-
-**Why positioning matters:**
-- If positioned relative to trigger item, dropdown appears off-center
-- Full-width megamenu needs to align with viewport edges, not trigger
-- Trigger items have different horizontal positions (left, center, right of navbar)
-- Positioning relative to viewport/navbar ensures consistent centered layout
 
 **Column layout:**
 - Equal-width columns or flexible grid
@@ -165,8 +217,11 @@ Electronics (header)
 
 **Essential features:**
 - [ ] Triggered from navbar items ("Shop", segments)
-- [ ] **CRITICAL: Megamenu positioned relative to viewport/navbar (NOT relative to trigger item)**
-- [ ] Full-width dropdown below navbar, centered
+- [ ] **CRITICAL: Navbar container has `position: relative` (creates positioning context)**
+- [ ] **CRITICAL: Megamenu has `position: absolute` with `left: 0` (NOT positioned relative to trigger button)**
+- [ ] **CRITICAL: Megamenu spans full width (`right: 0` or `w-full`, NOT just `w-auto`)**
+- [ ] **CRITICAL: Megamenu positioned at `top: 100%` or `top-full` (directly below navbar)**
+- [ ] Full-width dropdown below navbar, spans entire navbar width
 - [ ] 3-5 columns for organization
 - [ ] Category hierarchy (parent → children links)
 - [ ] Optional promotional images (1-2)
