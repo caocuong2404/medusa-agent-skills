@@ -41,11 +41,13 @@ Frontend integration guide for building storefronts with Medusa. Covers SDK usag
 
 ### 1. SDK Usage (CRITICAL)
 
+- `sdk-always-use` - **ALWAYS use the Medusa JS SDK for ALL API requests** - NEVER use regular fetch()
+- `sdk-existing-methods` - For built-in endpoints, use existing SDK methods (`sdk.store.product.list()`, `sdk.admin.order.retrieve()`)
+- `sdk-client-fetch` - For custom API routes, use `sdk.client.fetch()`
+- `sdk-required-headers` - SDK automatically adds required headers (publishable API key for store, auth for admin) - regular fetch() missing these headers causes errors
 - `sdk-no-json-stringify` - **NEVER use JSON.stringify() on body** - SDK handles serialization automatically
 - `sdk-plain-objects` - Pass plain JavaScript objects to body, not strings
 - `sdk-locate-first` - Always locate where SDK is instantiated in the project before using it
-- `sdk-client-fetch` - Use `sdk.client.fetch()` for custom API routes
-- `sdk-auto-headers` - SDK automatically adds Content-Type, auth headers, and API key
 
 ### 2. React Query Patterns (HIGH)
 
@@ -99,6 +101,8 @@ await sdk.client.fetch("/store/reviews", {
 Before implementing, verify you're NOT doing these:
 
 **SDK Usage:**
+- [ ] Using regular fetch() instead of the Medusa JS SDK (causes missing header errors)
+- [ ] Not using existing SDK methods for built-in endpoints (e.g., using sdk.client.fetch("/store/products") instead of sdk.store.product.list())
 - [ ] Using JSON.stringify() on the body parameter
 - [ ] Manually setting Content-Type headers (SDK adds them)
 - [ ] Hardcoding SDK import paths (locate in project first)
@@ -154,10 +158,21 @@ The reference file contains:
 
 ## Integration with Backend
 
+**⚠️ CRITICAL: ALWAYS use the Medusa JS SDK - NEVER use regular fetch()**
+
 When building features that span backend and frontend:
 
 1. **Backend (building-with-medusa skill):** Module → Workflow → API Route
 2. **Storefront (this skill):** SDK → React Query → UI Components
-3. **Connection:** Storefront calls backend API routes via `sdk.client.fetch()`
+3. **Connection:**
+   - Built-in endpoints: Use existing SDK methods (`sdk.store.product.list()`)
+   - Custom API routes: Use `sdk.client.fetch("/store/my-route")`
+   - **NEVER use regular fetch()** - missing publishable API key causes errors
+
+**Why the SDK is required:**
+- Store routes need `x-publishable-api-key` header
+- Admin routes need `Authorization` and session headers
+- SDK handles all required headers automatically
+- Regular fetch() without headers → authentication/authorization errors
 
 See `building-with-medusa` for backend API route patterns.
